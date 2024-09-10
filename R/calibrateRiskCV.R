@@ -106,7 +106,7 @@ calibrateRiskCV <- function(data
       folddf.s <- df %>% filter(.data$s == slist[i.s])
       
       # randomly assign fold
-      folddf.s$fold <- sample(1:k, size=nrow(df.s), replace=TRUE)
+      folddf.s$fold <- sample(1:k, size=nrow(folddf.s), replace=TRUE)
       
       # loop over folds
       for(f in 1:k){

@@ -4,12 +4,12 @@
 \name{fairRisk-package}
 \alias{fairRisk}
 \alias{fairRisk-package}
-\title{fairRisk: What the Package Does (One Line, Title Case)}
+\title{fairRisk: Risk adjusted error rates for evaluating algorithm fairness}
 \description{
-What the package does (one paragraph).
+This package implements the adjusted true positive rate estimator proposed by Hegarty et al.
 }
 \author{
-\strong{Maintainer}: Sarah Hegarty \email{hegarty@upenn.edu} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Sarah Hegarty \email{hegarty@upenn.edu} (\href{https://orcid.org/0000-0001-5348-350X}{ORCID})
 
 }
 \keyword{internal}

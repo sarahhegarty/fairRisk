@@ -1,6 +1,6 @@
-#' Calibrate risk 
+#' aTPR
 #'
-#' Calculate the re-calibrated risk within each group.
+#' Calculate the adjusted true positive rate with respect to a specified reference group.
 #'
 #' @param data a data.frame containing the original and re-calibrate risks, density ratio estimate and group label
 #' @param groupvar the group column
@@ -9,7 +9,7 @@
 #' @param risk the data.frame column representing the (original) risk score under evaluation
 #' @param taus a vector containing the decision thresholds of interest
 #' @param calmethod method to be used for calibration, default "logit"
-#' @param cal.args additional arguments for calibration method; with "logit" degree of polynomial 
+#' @param cal.args additional arguments for calibration method; with "logit" degree of polynomial and if risk score should be transformed with logit
 #' @param drmethod method for estimating density ratio
 #' @param dr.args arguments for density ratio estimation method
 #' @param cv logical indicating whether MSPE should be estimated by cross-validation
@@ -28,7 +28,7 @@ aTPR <- function(data
                  , risk
                  , taus
                  , calmethod = c('logit')
-                 , cal.args = list(2)
+                 , cal.args = list(2,TRUE)
                  , drmethod = c('logit')
                  , dr.args = list(2)
                  , cv = FALSE
@@ -44,9 +44,9 @@ aTPR <- function(data
                           , groupvar = {{groupvar}}
                           , response = {{response}}
                           , risk = {{risk}}
-                          , transform = TRUE
+                          , transform = cal.args[[2]]
                           , method = calmethod
-                          , args = cal.args
+                          , args = cal.args[[1]]
                           , cv = cv
                           , k = 5 )
   

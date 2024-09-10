@@ -2,7 +2,7 @@
 % Please edit documentation in R/aTPR.R
 \name{aTPR}
 \alias{aTPR}
-\title{Calibrate risk}
+\title{aTPR}
 \usage{
 aTPR(
   data,
@@ -12,7 +12,7 @@ aTPR(
   risk,
   taus,
   calmethod = c("logit"),
-  cal.args = list(2),
+  cal.args = list(2, TRUE),
   drmethod = c("logit"),
   dr.args = list(2),
   cv = FALSE
@@ -33,7 +33,7 @@ aTPR(
 
 \item{calmethod}{method to be used for calibration, default "logit"}
 
-\item{cal.args}{additional arguments for calibration method; with "logit" degree of polynomial}
+\item{cal.args}{additional arguments for calibration method; with "logit" degree of polynomial and if risk score should be transformed with logit}
 
 \item{drmethod}{method for estimating density ratio}
 
@@ -45,5 +45,5 @@ aTPR(
 a list with taus and aTPRs
 }
 \description{
-Calculate the re-calibrated risk within each group.
+Calculate the adjusted true positive rate with respect to a specified reference group.
 }

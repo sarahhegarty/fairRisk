@@ -1,10 +1,10 @@
 Package: fairRisk
-Title: What the Package Does (One Line, Title Case)
+Title: Risk adjusted error rates for evaluating algorithm fairness
 Version: 0.0.0.9000
 Authors@R: 
     person("Sarah", "Hegarty", , "hegarty@upenn.edu", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+           comment = c(ORCID = "0000-0001-5348-350X"))
+Description: This package implements the adjusted true positive rate estimator proposed by Hegarty et al. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
