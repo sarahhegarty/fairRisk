@@ -56,7 +56,6 @@ aTPR <- function(data
                           , k = 5 )
   
   # Step 3: Estimate density ratio
-  #df_atpr <- dfcal %>% mutate(w_s = 1)
   df_atpr <- estDensityRatio(train = dfcal
                              ,test = dfcal
                              ,method = drmethod
@@ -79,9 +78,10 @@ aTPR <- function(data
     
     for(b in 1:bootsize){
       # sample with replacement within group strata
-       boot.b <- {{data}} %>%
+       boot.b <- data %>%
           dplyr::group_by({{groupvar}}) %>%
-          dplyr::sample_frac(size = 1, replace = TRUE) 
+          dplyr::sample_frac(size = 1, replace = TRUE) %>%
+          dplyr::ungroup()
        
        # Step 1 & 2: Calibrate risk score
        dfcal.b <- calibrateRiskCV(data = boot.b
@@ -94,7 +94,6 @@ aTPR <- function(data
                                 , cv = FALSE)
        
        # Step 3: Estimate density ratio
-       #df_atpr <- dfcal %>% mutate(w_s = 1)
        df_atpr.b <- estDensityRatio(train = dfcal.b
                                   ,test = dfcal.b
                                   ,method = drmethod

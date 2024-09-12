@@ -24,7 +24,7 @@ calibrateRiskCV <- function(data
                           , response
                           , risk
                           , transform = TRUE
-                          , method = "qlogit"
+                          , method = "logit"
                           , args = list(2)
                           , cv = TRUE
                           , k = 5
@@ -40,7 +40,7 @@ calibrateRiskCV <- function(data
   check.risk <- data %>%
                 dplyr::select({{risk}}) %>%
                 range() 
-  if(transform == TRUE && (check.risk[1] < 0 || check.risk[2] > 1) ){stop("risk must be between 0 and 1")}
+  if(transform == TRUE && (check.risk[1] < 0 || check.risk[2] > 1) ){print(check.risk); stop("risk must be between 0 and 1")}
   
   check.group <- data %>%
                     dplyr::group_by({{groupvar}}) %>%

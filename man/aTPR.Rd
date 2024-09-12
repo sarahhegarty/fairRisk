@@ -47,6 +47,8 @@ aTPR(
 \item{se.boot}{logical indicating whether bootstrapping should be used to estimate standard error}
 
 \item{bootsize}{number of bootstrapped data sets to sample, default = 500}
+
+\item{alpha}{confidence level for bootstrap quantiles}
 }
 \value{
 a list with taus and aTPRs

@@ -10,7 +10,7 @@ calibrateRiskCV(
   response,
   risk,
   transform = TRUE,
-  method = "qlogit",
+  method = "logit",
   args = list(2),
   cv = TRUE,
   k = 5
