@@ -116,13 +116,15 @@ aTPR <- function(data
     }
     
     aTPR.boot <- aTPR.stack %>%
-              dplyr::group_by({{groupvar}},.data$tau) %>%
+              dplyr::group_by(.data$s,.data$tau) %>%
               dplyr::summarise(aTPR.bootmean = mean(.data$aTPR)
                                ,aTPR.boot.lower = quantile(.data$aTPR,alpha/2)
                                ,aTPR.boot.upper = quantile(.data$aTPR,1-alpha/2)
-                               ,aTPR.bootse = sd(.data$aTPR))
+                               ,aTPR.bootse = sd(.data$aTPR)) 
+              
     
-    aTPR <- aTPR %>% left_join(aTPR.boot, by = join_by({{groupvar}}, tau))         
+    aTPR <- aTPR %>%
+              left_join(aTPR.boot, by = join_by(s, tau)) 
   }
     
     return(aTPR)
