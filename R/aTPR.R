@@ -15,6 +15,7 @@
 #' @param cv logical indicating whether MSPE should be estimated by cross-validation
 #' @param se.boot logical indicating whether bootstrapping should be used to estimate standard error
 #' @param bootsize number of bootstrapped data sets to sample, default = 500
+#' @param alpha confidence level for bootstrap quantiles
 #'
 #' @return a list with taus and aTPRs 
 #' 
@@ -79,7 +80,7 @@ aTPR <- function(data
     for(b in 1:bootsize){
       # sample with replacement within group strata
        boot.b <- {{data}} %>%
-          dplyr::filter({{groupvar}} == s) %>%
+          dplyr::group_by({{groupvar}}) %>%
           dplyr::sample_frac(size = 1, replace = TRUE) 
        
        # Step 1 & 2: Calibrate risk score
