@@ -15,7 +15,10 @@ aTPR(
   cal.args = list(2, TRUE),
   drmethod = c("logit"),
   dr.args = list(2),
-  cv = FALSE
+  cv = FALSE,
+  se.boot = FALSE,
+  bootsize = 500,
+  alpha = 0.05
 )
 }
 \arguments{
@@ -40,6 +43,10 @@ aTPR(
 \item{dr.args}{arguments for density ratio estimation method}
 
 \item{cv}{logical indicating whether MSPE should be estimated by cross-validation}
+
+\item{se.boot}{logical indicating whether bootstrapping should be used to estimate standard error}
+
+\item{bootsize}{number of bootstrapped data sets to sample, default = 500}
 }
 \value{
 a list with taus and aTPRs

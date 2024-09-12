@@ -35,7 +35,7 @@ estDensityRatioCV <- function(data
   colnames(folddf)
 
   # randomly assign fold
-  folddf$fold <- sample(1:k, size=nrow(data), replace=TRUE)
+  folddf$fold <- sample(1:k, size=nrow(folddf), replace=TRUE)
   
   
   # loop over folds

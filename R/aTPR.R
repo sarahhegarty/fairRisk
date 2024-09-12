@@ -13,6 +13,8 @@
 #' @param drmethod method for estimating density ratio
 #' @param dr.args arguments for density ratio estimation method
 #' @param cv logical indicating whether MSPE should be estimated by cross-validation
+#' @param se.boot logical indicating whether bootstrapping should be used to estimate standard error
+#' @param bootsize number of bootstrapped data sets to sample, default = 500
 #'
 #' @return a list with taus and aTPRs 
 #' 
@@ -32,12 +34,14 @@ aTPR <- function(data
                  , drmethod = c('logit')
                  , dr.args = list(2)
                  , cv = FALSE
+                 , se.boot = FALSE
+                 , bootsize = 500
+                 , alpha = 0.05
                  ){
   
   # check for appropriate options for estimation steps
   if(!(tolower(calmethod)  %in% c('logit'))){stop("Calibration method (cm) not recognized, please choose from the following list: llogit, qlogit")}
   if(!(tolower(drmethod)  %in% c('logit','none'))){stop("Density ratio method (dm) not recognized, please choose from the following list: llogit, qlogit")}
-
 
   # Step 1 & 2: Calibrate risk score
   dfcal <- calibrateRiskCV(data = {{data}}
@@ -67,6 +71,59 @@ aTPR <- function(data
                    , dens_ratio = .data$w_s
                    , groupvar = .data$s
                    , taus = taus)
+  
+  if(se.boot == TRUE){
+    
+    aTPR.stack <- NULL 
+    
+    for(b in 1:bootsize){
+      # sample with replacement within group strata
+       boot.b <- {{data}} %>%
+          dplyr::filter({{groupvar}} == s) %>%
+          dplyr::sample_frac(size = 1, replace = TRUE) 
+       
+       # Step 1 & 2: Calibrate risk score
+       dfcal.b <- calibrateRiskCV(data = boot.b
+                                , groupvar = {{groupvar}}
+                                , response = {{response}}
+                                , risk = {{risk}}
+                                , transform = cal.args[[2]]
+                                , method = calmethod
+                                , args = cal.args[[1]]
+                                , cv = FALSE)
+       
+       # Step 3: Estimate density ratio
+       #df_atpr <- dfcal %>% mutate(w_s = 1)
+       df_atpr.b <- estDensityRatio(train = dfcal.b
+                                  ,test = dfcal.b
+                                  ,method = drmethod
+                                  ,args = dr.args
+                                  ,groupvar = .data$s
+                                  ,refgp = ref
+                                  ,calrisk = .data$rs.gX)
+       
+       # Step 4: Calculate adjuted TPR
+       aTPR.b <- get_aTPR(data = df_atpr.b
+                        , orig_risk = .data$gX
+                        , cal_risk = .data$rs.gX
+                        , dens_ratio = .data$w_s
+                        , groupvar = .data$s
+                        , taus = taus)
+       
+       # stack this bootstrap with previous
+       aTPR.stack <- aTPR.stack %>%
+                bind_rows(aTPR.b) 
+    }
+    
+    aTPR.boot <- aTPR.stack %>%
+              dplyr::group_by({{groupvar}},.data$tau) %>%
+              dplyr::summarise(aTPR.bootmean = mean(.data$aTPR)
+                               ,aTPR.boot.lower = quantile(.data$aTPR,alpha/2)
+                               ,aTPR.boot.upper = quantile(.data$aTPR,1-alpha/2)
+                               ,aTPR.bootse = sd(.data$aTPR))
+    
+    aTPR <- aTPR %>% left_join(aTPR.boot, by = join_by({{groupvar}}, tau))         
+  }
     
     return(aTPR)
 }
