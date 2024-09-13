@@ -1,6 +1,6 @@
 Package: fairRisk
 Title: Risk adjusted error rates for evaluating algorithm fairness
-Version: 1.0.0.11
+Version: 1.0.1.1
 Authors@R: 
     person("Sarah", "Hegarty", , "hegarty@upenn.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-5348-350X"))

@@ -18,7 +18,8 @@ aTPR(
   cv = FALSE,
   se.boot = FALSE,
   bootsize = 500,
-  alpha = 0.05
+  alpha = 0.05,
+  quietly = TRUE
 )
 }
 \arguments{
@@ -49,9 +50,11 @@ aTPR(
 \item{bootsize}{number of bootstrapped data sets to sample, default = 500}
 
 \item{alpha}{confidence level for bootstrap quantiles}
+
+\item{quietly}{suppress messages, default = TRUE}
 }
 \value{
-a list with taus and aTPRs
+a list containing a data.frama of aTPR estimates for each tau and group and separate data.frame of bootstrapped estimates if se.boot = TRUE
 }
 \description{
 Calculate the adjusted true positive rate with respect to a specified reference group.

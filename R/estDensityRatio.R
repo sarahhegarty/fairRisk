@@ -9,8 +9,9 @@
 #' @param groupvar group variable
 #' @param refgp reference group level
 #' @param calrisk re-calibrated risk score
+#' @param quietly logical for suppression of output messages, default = TRUE
 #'
-#' @return a list with taus and aTPRs 
+#' @return a data.frame with the estimated density ratio weights
 #' 
 #' @import dplyr
 #' @importFrom stats glm predict poly
@@ -25,9 +26,12 @@ estDensityRatio <- function(train
                             ,groupvar = .data$s
                             ,refgp = '1'
                             ,calrisk = .data$rs.gX
+                            ,quietly = TRUE
                             ){
   
-  cat("Estimating density ratio using reference label",deparse(substitute(groupvar)),"=",refgp,"\n")
+  if(quietly != TRUE){
+    cat("Estimating density ratio using reference label",deparse(substitute(groupvar)),"=",refgp,"\n")
+  }
   
   # make group zero-one 
   traindf <- {{train}} %>%

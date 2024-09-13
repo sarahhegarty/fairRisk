@@ -11,7 +11,8 @@ estDensityRatio(
   args = list(1),
   groupvar = .data$s,
   refgp = "1",
-  calrisk = .data$rs.gX
+  calrisk = .data$rs.gX,
+  quietly = TRUE
 )
 }
 \arguments{
@@ -28,9 +29,11 @@ estDensityRatio(
 \item{refgp}{reference group level}
 
 \item{calrisk}{re-calibrated risk score}
+
+\item{quietly}{logical for suppression of output messages, default = TRUE}
 }
 \value{
-a list with taus and aTPRs
+a data.frame with the estimated density ratio weights
 }
 \description{
 Calculate the density ratio of the re-calibrated risk between each group and reference group.

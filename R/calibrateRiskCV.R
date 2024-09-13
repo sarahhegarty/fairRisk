@@ -11,8 +11,9 @@
 #' @param args optional odditional arguments to be used for the method. e.g., when method = 'logit', the degree of the polynomial can be specified
 #' @param cv logical indicating if cross-validation estimate of MSPE should be performed
 #' @param k number of folds for cross-validation, default = 5
+#' @param quietly suppress output messages, default = TRUE
 #'
-#' @return data.frame with the calibrated risk results
+#' @return list with data.frame with the calibrated risk results and MSPE if cv option selected
 #' 
 #' @import dplyr
 #' @importFrom stats glm predict poly
@@ -28,6 +29,7 @@ calibrateRiskCV <- function(data
                           , args = list(2)
                           , cv = TRUE
                           , k = 5
+                          , quietly = TRUE
                           ){
   
   
@@ -73,8 +75,10 @@ calibrateRiskCV <- function(data
   
   ns = length(slist)
   
-  cat("There are ",ns," groups: ",slist,"\n")
- 
+  if(quietly != TRUE){
+    cat("There are ",ns," groups: ",slist,"\n")
+  }
+  
   # loop over groups
   for(i.s in 1:ns){
     
@@ -98,7 +102,9 @@ calibrateRiskCV <- function(data
   
   # use k-fold cross-validation to get MSPE
   if(cv == TRUE){
-    cat("Mean squared prediction error computed using",k,"-fold cross-validation \n")
+    if(quietly != TRUE){
+      cat("Mean squared prediction error of calibration step computed using",k,"-fold cross-validation \n")
+    }
     # loop over groups
     for(i.s in 1:ns){
       
@@ -131,10 +137,15 @@ calibrateRiskCV <- function(data
                 dplyr::mutate(diff.sq = (.data$y - .data$rs.gX)**2) %>%
                 dplyr::summarize(MSPE = mean(.data$diff.sq)) %>%
                 dplyr::pull(.data$MSPE)
-      cat("The mean square prediction error in group ",slist[i.s],"is",MSPE," \n")   
+      if(quietly != TRUE){
+        cat("The mean square prediction error for calibration model in group ",slist[i.s],"is",MSPE," \n") 
+      }
     } # end loop over group
     
   }
- 
-  return(caldf)
+  if(cv == TRUE){
+    out <- list(caldf = caldf, MSPE =MSPE)
+  }else{out <- list(caldf= caldf)}
+  
+  return(out)
 }

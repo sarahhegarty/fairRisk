@@ -6,6 +6,7 @@
 #' @importFrom stats glm
 #' @importFrom stats poly
 #' @importFrom stats predict
+#' @importFrom stats quantile
 #' @importFrom stats rbeta
 #' @importFrom stats rbinom
 #' @importFrom stats rnorm

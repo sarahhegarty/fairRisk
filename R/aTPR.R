@@ -16,11 +16,12 @@
 #' @param se.boot logical indicating whether bootstrapping should be used to estimate standard error
 #' @param bootsize number of bootstrapped data sets to sample, default = 500
 #' @param alpha confidence level for bootstrap quantiles
+#' @param quietly suppress messages, default = TRUE
 #'
-#' @return a list with taus and aTPRs 
+#' @return a list containing a data.frama of aTPR estimates for each tau and group and separate data.frame of bootstrapped estimates if se.boot = TRUE
 #' 
 #' @import dplyr
-#' @importFrom stats glm predict poly
+#' @importFrom stats glm predict poly sd quantile
 #'
 #' @export
 
@@ -38,6 +39,7 @@ aTPR <- function(data
                  , se.boot = FALSE
                  , bootsize = 500
                  , alpha = 0.05
+                 , quietly = TRUE
                  ){
   
   # check for appropriate options for estimation steps
@@ -53,28 +55,31 @@ aTPR <- function(data
                           , method = calmethod
                           , args = cal.args[[1]]
                           , cv = cv
-                          , k = 5 )
+                          , k = 5 
+                          , quietly = quietly)
   
   # Step 3: Estimate density ratio
-  df_atpr <- estDensityRatio(train = dfcal
-                             ,test = dfcal
-                             ,method = drmethod
-                             ,args = dr.args
-                             ,groupvar = .data$s
-                             ,refgp = ref
-                             ,calrisk = .data$rs.gX)
+  df_atpr <- estDensityRatioCV(data = dfcal[[1]]
+                                ,method = drmethod
+                                ,args = dr.args
+                                ,groupvar = .data$s
+                                ,refgp = ref
+                                ,calrisk = .data$rs.gX
+                                ,cv = cv
+                                ,k = 5
+                                ,quietly = quietly)
   
   # Step 4: Calculate adjuted TPR
-  aTPR <- get_aTPR(data = df_atpr
+  aTPR <- get_aTPR(data = df_atpr[[1]]
                    , orig_risk = .data$gX
                    , cal_risk = .data$rs.gX
                    , dens_ratio = .data$w_s
                    , groupvar = .data$s
                    , taus = taus)
   
-  if(se.boot == TRUE){
+   if(se.boot == TRUE){
     
-    aTPR.stack <- NULL 
+    aTPR.boot <- NULL 
     
     for(b in 1:bootsize){
       # sample with replacement within group strata
@@ -91,19 +96,21 @@ aTPR <- function(data
                                 , transform = cal.args[[2]]
                                 , method = calmethod
                                 , args = cal.args[[1]]
-                                , cv = FALSE)
+                                , cv = FALSE
+                                , quietly = TRUE)
        
        # Step 3: Estimate density ratio
-       df_atpr.b <- estDensityRatio(train = dfcal.b
-                                  ,test = dfcal.b
-                                  ,method = drmethod
-                                  ,args = dr.args
-                                  ,groupvar = .data$s
-                                  ,refgp = ref
-                                  ,calrisk = .data$rs.gX)
+       df_atpr.b <- estDensityRatioCV(data = dfcal.b[[1]]
+                                      ,method = drmethod
+                                      ,args = dr.args
+                                      ,groupvar = .data$s
+                                      ,refgp = ref
+                                      ,calrisk = .data$rs.gX
+                                      ,cv = FALSE
+                                      ,quietly = TRUE)
        
        # Step 4: Calculate adjuted TPR
-       aTPR.b <- get_aTPR(data = df_atpr.b
+       aTPR.b <- get_aTPR(data = df_atpr.b[[1]]
                         , orig_risk = .data$gX
                         , cal_risk = .data$rs.gX
                         , dens_ratio = .data$w_s
@@ -111,21 +118,29 @@ aTPR <- function(data
                         , taus = taus)
        
        # stack this bootstrap with previous
-       aTPR.stack <- aTPR.stack %>%
-                bind_rows(aTPR.b) 
+       aTPR.boot <- aTPR.boot %>%
+                bind_rows(aTPR.b %>%
+                            mutate(bootrep = b)) 
     }
     
-    aTPR.boot <- aTPR.stack %>%
+    aTPR.boot.sum <- aTPR.boot %>%
               dplyr::group_by(.data$s,.data$tau) %>%
               dplyr::summarise(aTPR.bootmean = mean(.data$aTPR)
                                ,aTPR.boot.lower = quantile(.data$aTPR,alpha/2)
                                ,aTPR.boot.upper = quantile(.data$aTPR,1-alpha/2)
-                               ,aTPR.bootse = sd(.data$aTPR)) 
+                               ,aTPR.bootse = sd(.data$aTPR)
+                               ,n = n()) 
               
     
     aTPR <- aTPR %>%
-              left_join(aTPR.boot, by = join_by(s, tau)) 
+              left_join(aTPR.boot.sum, by = join_by(s, tau)) 
   }
     
-    return(aTPR)
+   if(se.boot == TRUE){
+     out <- list(aTPR = aTPR, boot = aTPR.boot) 
+   }else{
+     out <- list(aTPR = aTPR)
+   }
+  
+    return(out)
 }

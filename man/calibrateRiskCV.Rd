@@ -13,7 +13,8 @@ calibrateRiskCV(
   method = "logit",
   args = list(2),
   cv = TRUE,
-  k = 5
+  k = 5,
+  quietly = TRUE
 )
 }
 \arguments{
@@ -34,9 +35,11 @@ calibrateRiskCV(
 \item{cv}{logical indicating if cross-validation estimate of MSPE should be performed}
 
 \item{k}{number of folds for cross-validation, default = 5}
+
+\item{quietly}{suppress output messages, default = TRUE}
 }
 \value{
-data.frame with the calibrated risk results
+list with data.frame with the calibrated risk results and MSPE if cv option selected
 }
 \description{
 Calculate the re-calibrated risk within each group.

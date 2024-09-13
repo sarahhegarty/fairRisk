@@ -11,7 +11,9 @@ estDensityRatioCV(
   groupvar = .data$s,
   refgp = "1",
   calrisk = .data$rs.gX,
-  k = 5
+  cv = TRUE,
+  k = 5,
+  quietly = TRUE
 )
 }
 \arguments{
@@ -27,11 +29,15 @@ estDensityRatioCV(
 
 \item{calrisk}{calibrated risk score}
 
+\item{cv}{logical indicating if cross-validation should be performed to estimate MSPE}
+
 \item{k}{number of folds for cross-validation}
+
+\item{quietly}{suppress messages, default = TRUE}
 }
 \value{
-a list with taus and aTPRs
+a list with data.frame with estimated density ratio weights and MSPE if cv options selected
 }
 \description{
-Calculate the re-calibrated risk within each group.
+Calculate the density ratio of the re-calibrated risk between each group and reference group.
 }
