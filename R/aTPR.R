@@ -2,7 +2,7 @@
 #'
 #' Calculate the adjusted true positive rate with respect to a specified reference group.
 #'
-#' @param data a data.frame containing the original and re-calibrate risks, density ratio estimate and group label
+#' @param data a data.frame containing the original and re-calibrated risks, density ratio estimate and group label
 #' @param groupvar the group column
 #' @param ref reference level
 #' @param response response variable

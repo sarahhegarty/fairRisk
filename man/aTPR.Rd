@@ -23,7 +23,7 @@ aTPR(
 )
 }
 \arguments{
-\item{data}{a data.frame containing the original and re-calibrate risks, density ratio estimate and group label}
+\item{data}{a data.frame containing the original and re-calibrated risks, density ratio estimate and group label}
 
 \item{groupvar}{the group column}
 

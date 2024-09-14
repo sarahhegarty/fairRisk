@@ -4,10 +4,19 @@
 \alias{naiveTPR}
 \title{Standard True Positive Rate (TPR)}
 \usage{
-naiveTPR(data, risk, response, groupvar, taus = seq(0.1, 0.9, 0.1))
+naiveTPR(
+  data,
+  risk,
+  response,
+  groupvar,
+  taus = seq(0.1, 0.9, 0.1),
+  se.boot = FALSE,
+  bootsize = 500,
+  alpha = 0.05
+)
 }
 \arguments{
-\item{data}{a data.frame containing the original and re-calibrate risks, density ratio estimate and group label}
+\item{data}{a data.frame containing a risk score, response label and group label}
 
 \item{risk}{the data.frame column representing the (original) risk score under evaluation}
 
@@ -16,9 +25,15 @@ naiveTPR(data, risk, response, groupvar, taus = seq(0.1, 0.9, 0.1))
 \item{groupvar}{the group column}
 
 \item{taus}{a vector containing the decision thresholds of interest}
+
+\item{se.boot}{logical indicating whether bootstrapping should be used to estimate standard error}
+
+\item{bootsize}{number of bootstrapped data sets to sample, default = 500}
+
+\item{alpha}{confidence level for bootstrap quantiles}
 }
 \value{
-a list with taus and aTPRs
+a list with a data.frame of TPRs by tau and group and data.frame of bootstrapped estimates if se.boot = TRUE
 }
 \description{
 Calculate the true positive rate
