@@ -8,6 +8,7 @@
 #' @param groupvar group variable
 #' @param refgp reference group level
 #' @param calrisk calibrated risk score
+#' @param transform  use logit of calibrated risk (TRUE) or calibrated risk on probability scale (FALSE), default
 #' @param cv logical indicating if cross-validation should be performed to estimate MSPE
 #' @param k number of folds for cross-validation
 #' @param quietly suppress messages, default = TRUE
@@ -26,6 +27,7 @@ estDensityRatioCV <- function(data
                             ,groupvar = .data$s
                             ,refgp = '1'
                             ,calrisk = .data$rs.gX
+                            ,transform = FALSE
                             ,cv = TRUE
                             ,k = 5
                             ,quietly = TRUE
@@ -38,6 +40,7 @@ estDensityRatioCV <- function(data
                            ,groupvar = .data$s
                            ,refgp = refgp
                            ,calrisk = .data$rs.gX
+                           ,transform = transform
                            ,quietly = quietly)
   
   if(cv == TRUE){
@@ -64,6 +67,7 @@ estDensityRatioCV <- function(data
                                 ,groupvar = .data$s
                                 ,refgp
                                 ,calrisk = .data$rs.gX
+                                ,transform = transform
                                 ,quietly = quietly)
       
       # stack results by fold

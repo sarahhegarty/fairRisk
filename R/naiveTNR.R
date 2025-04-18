@@ -1,6 +1,6 @@
-#' Standard True Positive Rate (TPR)
+#' Standard True Negative Rate (TNR)
 #'
-#' Calculate the true positive rate
+#' Calculate the true negative rate
 #'
 #' @param data a data.frame containing a risk score, response label and group label
 #' @param risk the data.frame column representing the (original) risk score under evaluation
@@ -11,14 +11,14 @@
 #' @param bootsize number of bootstrapped data sets to sample, default = 500
 #' @param alpha confidence level for bootstrap quantiles
 
-#' @return a list with a data.frame of TPRs by tau and group and data.frame of bootstrapped estimates if se.boot = TRUE 
+#' @return a list with a data.frame of TNRs by tau and group and data.frame of bootstrapped estimates if se.boot = TRUE 
 #' 
 #' @import dplyr
 #' @importFrom stats quantile sd
 #'
 #' @export
 
-naiveTPR <- function(data
+naiveTNR <- function(data
                      , risk
                      , response 
                      , groupvar
@@ -28,7 +28,7 @@ naiveTPR <- function(data
                      , alpha = 0.05
                      ){
   
-  TPR <- get_naiveTPR(data = {{data}}
+  TNR <- get_naiveTNR(data = {{data}}
                , risk = {{risk}}
                , response = {{response}}
                , groupvar = {{groupvar}}
@@ -36,7 +36,7 @@ naiveTPR <- function(data
   
   if(se.boot == TRUE){
     
-    TPR.boot <- NULL 
+    TNR.boot <- NULL 
     
     for(b in 1:bootsize){
       # sample with replacement within group strata
@@ -45,35 +45,35 @@ naiveTPR <- function(data
         dplyr::sample_frac(size = 1, replace = TRUE) %>%
         dplyr::ungroup()
       
-      # get TPR for this bootstrapped sample
-      TPR.b <- get_naiveTPR(data = boot.b
+      # get TNR for this bootstrapped sample
+      TNR.b <- get_naiveTNR(data = boot.b
                           , risk = {{risk}}
                           , response = {{response}}
                           , groupvar = {{groupvar}}
                           , taus = taus)
       
       # stack this bootstrap with previous
-      TPR.boot <- TPR.boot %>%
-                    bind_rows(TPR.b %>% mutate(bootrep = b))
+      TNR.boot <- TNR.boot %>%
+                    bind_rows(TNR.b %>% mutate(bootrep = b))
     }
     
-    TPR.boot.sum <- TPR.boot %>%
+    TNR.boot.sum <- TNR.boot %>%
       dplyr::group_by({{groupvar}},.data$tau) %>%
-      dplyr::summarise(TPR.bootmean = mean(.data$TPR)
-                       ,TPR.boot.lower = quantile(.data$TPR,alpha/2)
-                       ,TPR.boot.upper = quantile(.data$TPR,1-alpha/2)
-                       ,TPR.bootse = sd(.data$TPR)
+      dplyr::summarise(TNR.bootmean = mean(.data$TNR)
+                       ,TNR.boot.lower = quantile(.data$TNR,alpha/2)
+                       ,TNR.boot.upper = quantile(.data$TNR,1-alpha/2)
+                       ,TNR.bootse = sd(.data$TNR)
                        ,n = n()) 
     
     
-    TPR <- TPR %>%
-      left_join(TPR.boot.sum, by = join_by({{groupvar}}, .data$tau)) 
+    TNR <- TNR %>%
+      left_join(TNR.boot.sum, by = join_by({{groupvar}}, .data$tau)) 
   }
   
   if(se.boot == TRUE){
-    out <- list(TPR = TPR, boot = TPR.boot) 
+    out <- list(TNR = TNR, boot = TNR.boot) 
   }else{
-    out <- list(TPR = TPR)
+    out <- list(TNR = TNR)
   }
   
   return(out)

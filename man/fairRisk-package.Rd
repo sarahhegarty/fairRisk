@@ -6,7 +6,7 @@
 \alias{fairRisk-package}
 \title{fairRisk: Risk adjusted error rates for evaluating algorithm fairness}
 \description{
-This package implements the adjusted true positive rate estimator proposed by Hegarty et al.
+Implements the adjusted true positive rate estimator proposed in Assessing Algorithm Fairness Requires Adjustment for Risk Distribution Differences: Re-considering the Equal Opportunity Criterion. Sarah E. Hegarty, Kristin A. Linn, Hong Zhang, Stephanie Teeple, Paul S. Albert, Ravi B. Parikh, Katherine Courtright, David M. Kent, Jinbo Chen. medRxiv 2025.01.31.25321489; doi: https://doi.org/10.1101/2025.01.31.25321489.
 }
 \author{
 \strong{Maintainer}: Sarah Hegarty \email{hegarty@upenn.edu} (\href{https://orcid.org/0000-0001-5348-350X}{ORCID})

@@ -1,6 +1,6 @@
-#' aTPR
+#' aTNR
 #'
-#' Calculate the adjusted true positive rate with respect to a specified reference group.
+#' Calculate the adjusted true negative rate with respect to a specified reference group.
 #'
 #' @param data a data.frame containing the original and re-calibrated risks, density ratio estimate and group label
 #' @param groupvar the group column
@@ -18,14 +18,14 @@
 #' @param alpha confidence level for bootstrap quantiles
 #' @param quietly suppress messages, default = TRUE
 #'
-#' @return a list containing a data.frama of aTPR estimates for each tau and group and separate data.frame of bootstrapped estimates if se.boot = TRUE
+#' @return a list containing a data.frama of aTNR estimates for each tau and group and separate data.frame of bootstrapped estimates if se.boot = TRUE
 #' 
 #' @import dplyr
 #' @importFrom stats glm predict poly sd quantile
 #'
 #' @export
 
-aTPR <- function(data
+aTNR <- function(data
                  , groupvar
                  , ref
                  , response
@@ -60,7 +60,7 @@ aTPR <- function(data
                           , quietly = quietly)
   
   # Step 3: Estimate density ratio
-  df_atpr <- estDensityRatioCV(data = dfcal[[1]]
+  dfden <- estDensityRatioCV(data = dfcal[[1]]
                                 ,method = drmethod
                                 ,args = dr.args[[1]]
                                 ,groupvar = .data$s
@@ -71,8 +71,8 @@ aTPR <- function(data
                                 ,k = 5
                                 ,quietly = quietly)
   
-  # Step 4: Calculate adjuted TPR
-  aTPR <- get_aTPR(data = df_atpr[[1]]
+  # Step 4: Calculate adjusted TNR
+  aTNR <- get_aTNR(data = dfden[[1]]
                    , orig_risk = .data$gX
                    , cal_risk = .data$rs.gX
                    , dens_ratio = .data$w_s
@@ -81,7 +81,7 @@ aTPR <- function(data
   
    if(se.boot == TRUE){
     
-    aTPR.boot <- NULL 
+    aTNR.boot <- NULL 
     
     for(b in 1:bootsize){
       # sample with replacement within group strata
@@ -102,7 +102,7 @@ aTPR <- function(data
                                 , quietly = TRUE)
        
        # Step 3: Estimate density ratio
-       df_atpr.b <- estDensityRatioCV(data = dfcal.b[[1]]
+       dfden.b <- estDensityRatioCV(data = dfcal.b[[1]]
                                       ,method = drmethod
                                       ,args = dr.args[[1]]
                                       ,groupvar = .data$s
@@ -112,8 +112,8 @@ aTPR <- function(data
                                       ,cv = FALSE
                                       ,quietly = TRUE)
        
-       # Step 4: Calculate adjuted TPR
-       aTPR.b <- get_aTPR(data = df_atpr.b[[1]]
+       # Step 4: Calculate adjusted TNR
+       aTNR.b <- get_aTNR(data = dfden.b[[1]]
                         , orig_risk = .data$gX
                         , cal_risk = .data$rs.gX
                         , dens_ratio = .data$w_s
@@ -121,28 +121,28 @@ aTPR <- function(data
                         , taus = taus)
        
        # stack this bootstrap with previous
-       aTPR.boot <- aTPR.boot %>%
-                bind_rows(aTPR.b %>%
+       aTNR.boot <- aTNR.boot %>%
+                bind_rows(aTNR.b %>%
                             mutate(bootrep = b)) 
     }
     
-    aTPR.boot.sum <- aTPR.boot %>%
+    aTNR.boot.sum <- aTNR.boot %>%
               dplyr::group_by(.data$s,.data$tau) %>%
-              dplyr::summarise(aTPR.bootmean = mean(.data$aTPR)
-                               ,aTPR.boot.lower = quantile(.data$aTPR,alpha/2)
-                               ,aTPR.boot.upper = quantile(.data$aTPR,1-alpha/2)
-                               ,aTPR.bootse = sd(.data$aTPR)
+              dplyr::summarise(aTNR.bootmean = mean(.data$aTNR)
+                               ,aTNR.boot.lower = quantile(.data$aTNR,alpha/2)
+                               ,aTNR.boot.upper = quantile(.data$aTNR,1-alpha/2)
+                               ,aTNR.bootse = sd(.data$aTNR)
                                ,n = n()) 
               
     
-    aTPR <- aTPR %>%
-              left_join(aTPR.boot.sum, by = join_by(.data$s, .data$tau)) 
+    aTNR <- aTNR %>%
+              left_join(aTNR.boot.sum, by = join_by(.data$s, .data$tau)) 
   }
     
    if(se.boot == TRUE){
-     out <- list(aTPR = aTPR, boot = aTPR.boot) 
+     out <- list(aTNR = aTNR, boot = aTNR.boot) 
    }else{
-     out <- list(aTPR = aTPR)
+     out <- list(aTNR = aTNR)
    }
   
     return(out)

@@ -1,6 +1,6 @@
-#' aTPR
+#' aer: adjusted error rates
 #'
-#' Calculate the adjusted true positive rate with respect to a specified reference group.
+#' Calculate the adjusted TPR, TNR, PPV and NPV with respect to a specified reference group.
 #'
 #' @param data a data.frame containing the original and re-calibrated risks, density ratio estimate and group label
 #' @param groupvar the group column
@@ -18,14 +18,14 @@
 #' @param alpha confidence level for bootstrap quantiles
 #' @param quietly suppress messages, default = TRUE
 #'
-#' @return a list containing a data.frama of aTPR estimates for each tau and group and separate data.frame of bootstrapped estimates if se.boot = TRUE
+#' @return a list containing a data.frame of aTPR, aTNR, aPPV, aNPV estimates for each tau and group and separate data.frame of bootstrapped estimates if se.boot = TRUE
 #' 
 #' @import dplyr
 #' @importFrom stats glm predict poly sd quantile
 #'
 #' @export
 
-aTPR <- function(data
+aer <- function(data
                  , groupvar
                  , ref
                  , response
@@ -41,7 +41,7 @@ aTPR <- function(data
                  , alpha = 0.05
                  , quietly = TRUE
                  ){
-  
+
   # check for appropriate options for estimation steps
   if(!(tolower(calmethod)  %in% c('logit'))){stop("Calibration method (cm) not recognized, please choose from the following list: llogit, qlogit")}
   if(!(tolower(drmethod)  %in% c('logit','none'))){stop("Density ratio method (dm) not recognized, please choose from the following list: llogit, qlogit")}
@@ -60,7 +60,7 @@ aTPR <- function(data
                           , quietly = quietly)
   
   # Step 3: Estimate density ratio
-  df_atpr <- estDensityRatioCV(data = dfcal[[1]]
+  df_w <- estDensityRatioCV(data = dfcal[[1]]
                                 ,method = drmethod
                                 ,args = dr.args[[1]]
                                 ,groupvar = .data$s
@@ -71,14 +71,36 @@ aTPR <- function(data
                                 ,k = 5
                                 ,quietly = quietly)
   
-  # Step 4: Calculate adjuted TPR
-  aTPR <- get_aTPR(data = df_atpr[[1]]
+  # Step 4: Calculate adjusted metrics
+  aTPR <- get_aTPR(data = df_w[[1]]
                    , orig_risk = .data$gX
                    , cal_risk = .data$rs.gX
                    , dens_ratio = .data$w_s
                    , groupvar = .data$s
                    , taus = taus)
-  
+  aTNR <- get_aTNR(data = df_w[[1]]
+                   , orig_risk = .data$gX
+                   , cal_risk = .data$rs.gX
+                   , dens_ratio = .data$w_s
+                   , groupvar = .data$s
+                   , taus = taus)
+  aPPV <- get_aPPV(data = df_w[[1]]
+                   , orig_risk = .data$gX
+                   , cal_risk = .data$rs.gX
+                   , dens_ratio = .data$w_s
+                   , groupvar = .data$s
+                   , taus = taus)
+  aNPV <- get_aNPV(data = df_w[[1]]
+                   , orig_risk = .data$gX
+                   , cal_risk = .data$rs.gX
+                   , dens_ratio = .data$w_s
+                   , groupvar = .data$s
+                   , taus = taus)
+  aER <- aTPR %>%
+            left_join(aTNR, by = join_by(tau, s)) %>%
+            left_join(aPPV, by = join_by(tau, s)) %>%
+            left_join(aNPV, by = join_by(tau, s)) 
+    
    if(se.boot == TRUE){
     
     aTPR.boot <- NULL 
@@ -102,7 +124,7 @@ aTPR <- function(data
                                 , quietly = TRUE)
        
        # Step 3: Estimate density ratio
-       df_atpr.b <- estDensityRatioCV(data = dfcal.b[[1]]
+       df_w.b <- estDensityRatioCV(data = dfcal.b[[1]]
                                       ,method = drmethod
                                       ,args = dr.args[[1]]
                                       ,groupvar = .data$s
@@ -112,37 +134,112 @@ aTPR <- function(data
                                       ,cv = FALSE
                                       ,quietly = TRUE)
        
-       # Step 4: Calculate adjuted TPR
-       aTPR.b <- get_aTPR(data = df_atpr.b[[1]]
+       # Step 4a: Calculate adjusted metrics - TPR
+       aTPR.b <- get_aTPR(data = df_w.b[[1]]
                         , orig_risk = .data$gX
                         , cal_risk = .data$rs.gX
                         , dens_ratio = .data$w_s
                         , groupvar = .data$s
                         , taus = taus)
-       
        # stack this bootstrap with previous
        aTPR.boot <- aTPR.boot %>%
-                bind_rows(aTPR.b %>%
-                            mutate(bootrep = b)) 
+         bind_rows(aTPR.b %>%
+                     mutate(bootrep = b)) 
+     
+       # Step 4b: Calculate adjusted metrics - TNR
+       aTNR.b <- get_aTNR(data = df_w.b[[1]]
+                          , orig_risk = .data$gX
+                          , cal_risk = .data$rs.gX
+                          , dens_ratio = .data$w_s
+                          , groupvar = .data$s
+                          , taus = taus)
+       # stack this bootstrap with previous
+       aTNR.boot <- aTNR.boot %>%
+         bind_rows(aTNR.b %>%
+                     mutate(bootrep = b)) 
+       
+       # Step 4c: Calculate adjusted metrics - PPV
+       aPPV.b <- get_aPPV(data = df_w.b[[1]]
+                          , orig_risk = .data$gX
+                          , cal_risk = .data$rs.gX
+                          , dens_ratio = .data$w_s
+                          , groupvar = .data$s
+                          , taus = taus) 
+       # stack this bootstrap with previous
+       aPPV.boot <- aPPV.boot %>%
+         bind_rows(aPPV.b %>%
+                     mutate(bootrep = b)) 
+       
+       # Step 4d: Calculate adjusted metrics - NPV
+       aNPV.b <- get_aNPV(data = df_w.b[[1]]
+                          , orig_risk = .data$gX
+                          , cal_risk = .data$rs.gX
+                          , dens_ratio = .data$w_s
+                          , groupvar = .data$s
+                          , taus = taus)
+       # stack this bootstrap with previous
+       aNPV.boot <- aNPV.boot %>%
+         bind_rows(aNPV.b %>%
+                     mutate(bootrep = b)) 
+       
+      
     }
+    aer.boot <- aTPR.boot %>%
+                  left_join(aTNR.boot, by = join_by(tau, s, b)) %>%
+                  left_join(aPPV.boot, by = join_by(tau, s, b)) %>%
+                  left_join(aNPV.boot, by = join_by(tau, s, b))
     
+    # get boot summary for TPR
     aTPR.boot.sum <- aTPR.boot %>%
               dplyr::group_by(.data$s,.data$tau) %>%
-              dplyr::summarise(aTPR.bootmean = mean(.data$aTPR)
+              dplyr::summarise( aTPR.bootmean = mean(.data$aTPR)
                                ,aTPR.boot.lower = quantile(.data$aTPR,alpha/2)
                                ,aTPR.boot.upper = quantile(.data$aTPR,1-alpha/2)
                                ,aTPR.bootse = sd(.data$aTPR)
                                ,n = n()) 
-              
-    
     aTPR <- aTPR %>%
               left_join(aTPR.boot.sum, by = join_by(.data$s, .data$tau)) 
+    
+    # get boot summary for TNR
+    aTNR.boot.sum <- aTNR.boot %>%
+      dplyr::group_by(.data$s,.data$tau) %>%
+      dplyr::summarise( aTNR.bootmean = mean(.data$aTNR)
+                        ,aTNR.boot.lower = quantile(.data$aTNR,alpha/2)
+                        ,aTNR.boot.upper = quantile(.data$aTNR,1-alpha/2)
+                        ,aTNR.bootse = sd(.data$aTNR)
+                        ,n = n()) 
+    aTNR <- aTNR %>%
+              left_join(aTNR.boot.sum, by = join_by(.data$s, .data$tau)) 
+    
+    # get boot summary for PPV
+    aPPV.boot.sum <- aPPV.boot %>%
+      dplyr::group_by(.data$s,.data$tau) %>%
+      dplyr::summarise( aPPV.bootmean = mean(.data$aPPV)
+                        ,aPPV.boot.lower = quantile(.data$aPPV,alpha/2)
+                        ,aPPV.boot.upper = quantile(.data$aPPV,1-alpha/2)
+                        ,aPPV.bootse = sd(.data$aPPV)
+                        ,n = n()) 
+    aPPV <- aPPV %>%
+      left_join(aPPV.boot.sum, by = join_by(.data$s, .data$tau)) 
+    
+    # get boot summary for NPV
+    aNPV.boot.sum <- aNPV.boot %>%
+      dplyr::group_by(.data$s,.data$tau) %>%
+      dplyr::summarise( aNPV.bootmean = mean(.data$aNPV)
+                        ,aNPV.boot.lower = quantile(.data$aNPV,alpha/2)
+                        ,aNPV.boot.upper = quantile(.data$aNPV,1-alpha/2)
+                        ,aNPV.bootse = sd(.data$aNPV)
+                        ,n = n()) 
+    
+    aNPV <- aNPV %>%
+      left_join(aNPV.boot.sum, by = join_by(.data$s, .data$tau)) 
   }
     
    if(se.boot == TRUE){
-     out <- list(aTPR = aTPR, boot = aTPR.boot) 
+     out <- list(aer = aer, aTPR = aTPR, aTNR = aTNR, aPPV = aPPV, aNPV = aNPV
+                 , boot = aTPR.boot, aer.boot = aer.boot) 
    }else{
-     out <- list(aTPR = aTPR)
+     out <- list(aER = aER, aTPR = aTPR, aTNR = aTNR, aPPV = aPPV, aNPV = aNPV)
    }
   
     return(out)

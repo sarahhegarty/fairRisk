@@ -11,6 +11,7 @@ estDensityRatioCV(
   groupvar = .data$s,
   refgp = "1",
   calrisk = .data$rs.gX,
+  transform = FALSE,
   cv = TRUE,
   k = 5,
   quietly = TRUE
@@ -28,6 +29,8 @@ estDensityRatioCV(
 \item{refgp}{reference group level}
 
 \item{calrisk}{calibrated risk score}
+
+\item{transform}{use logit of calibrated risk (TRUE) or calibrated risk on probability scale (FALSE), default}
 
 \item{cv}{logical indicating if cross-validation should be performed to estimate MSPE}
 

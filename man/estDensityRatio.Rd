@@ -12,6 +12,7 @@ estDensityRatio(
   groupvar = .data$s,
   refgp = "1",
   calrisk = .data$rs.gX,
+  transform = FALSE,
   quietly = TRUE
 )
 }
@@ -29,6 +30,8 @@ estDensityRatio(
 \item{refgp}{reference group level}
 
 \item{calrisk}{re-calibrated risk score}
+
+\item{transform}{use logit of calibrated risk (TRUE) or calibrated risk on probability scale (FALSE), default}
 
 \item{quietly}{logical for suppression of output messages, default = TRUE}
 }

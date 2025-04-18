@@ -9,6 +9,7 @@
 #' @param groupvar group variable
 #' @param refgp reference group level
 #' @param calrisk re-calibrated risk score
+#' @param transform use logit of calibrated risk (TRUE) or calibrated risk on probability scale (FALSE), default
 #' @param quietly logical for suppression of output messages, default = TRUE
 #'
 #' @return a data.frame with the estimated density ratio weights
@@ -26,6 +27,7 @@ estDensityRatio <- function(train
                             ,groupvar = .data$s
                             ,refgp = '1'
                             ,calrisk = .data$rs.gX
+                            ,transform=FALSE
                             ,quietly = TRUE
                             ){
   
@@ -36,11 +38,13 @@ estDensityRatio <- function(train
   # make group zero-one 
   traindf <- {{train}} %>%
         dplyr::mutate(refind = if_else({{groupvar}} == refgp, 1, 0)
-               ,rs.gX = {{calrisk}})
+               ,rs.gX = {{calrisk}}
+               ,lp = logit(.data$rs.gX))
  
   testdf <- {{test}} %>%
         dplyr::mutate(refind = if_else({{groupvar}} == refgp, 1, 0)
-               ,rs.gX = {{calrisk}})
+               ,rs.gX = {{calrisk}}
+               ,lp = logit(.data$rs.gX))
   
   # Determine non-ref group levels 
   slist <-  {{train}} %>%
@@ -72,13 +76,16 @@ estDensityRatio <- function(train
                   dplyr::bind_rows(train.s)
     
     # test set for non-ref group only
-    test.s <- testdf %>% dplyr::filter({{groupvar}} == slist[i.s])
+    test.s <- testdf %>% dplyr::filter({{groupvar}} == slist[i.s]) 
     
     # ------------ estimate density ratio ------------- #
     if(method == 'logit'){
       deg = args[[1]]
-      
+      if(transform == FALSE){
       dr.fit <- stats::glm(refind ~ poly(rs.gX ,deg), data = train.s, family = 'binomial') 
+      }else{
+        dr.fit <- stats::glm(refind ~ poly(lp ,deg), data = train.s, family = 'binomial') 
+      }
       ps_ref <- stats::predict(dr.fit, newdata = test.s, type='response')
       test.s$w_s <- ps_ref/(1-ps_ref)*n_s/n_ref
       

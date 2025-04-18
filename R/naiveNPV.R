@@ -1,6 +1,6 @@
-#' Standard True Positive Rate (TPR)
+#' Standard Negative Predictive Value (NPV)
 #'
-#' Calculate the true positive rate
+#' Calculate the negative predictive value
 #'
 #' @param data a data.frame containing a risk score, response label and group label
 #' @param risk the data.frame column representing the (original) risk score under evaluation
@@ -11,14 +11,14 @@
 #' @param bootsize number of bootstrapped data sets to sample, default = 500
 #' @param alpha confidence level for bootstrap quantiles
 
-#' @return a list with a data.frame of TPRs by tau and group and data.frame of bootstrapped estimates if se.boot = TRUE 
+#' @return a list with a data.frame of NPVs by tau and group and data.frame of bootstrapped estimates if se.boot = TRUE 
 #' 
 #' @import dplyr
 #' @importFrom stats quantile sd
 #'
 #' @export
 
-naiveTPR <- function(data
+naiveNPV <- function(data
                      , risk
                      , response 
                      , groupvar
@@ -28,7 +28,7 @@ naiveTPR <- function(data
                      , alpha = 0.05
                      ){
   
-  TPR <- get_naiveTPR(data = {{data}}
+  NPV <- get_naiveNPV(data = {{data}}
                , risk = {{risk}}
                , response = {{response}}
                , groupvar = {{groupvar}}
@@ -36,7 +36,7 @@ naiveTPR <- function(data
   
   if(se.boot == TRUE){
     
-    TPR.boot <- NULL 
+    NPV.boot <- NULL 
     
     for(b in 1:bootsize){
       # sample with replacement within group strata
@@ -45,35 +45,35 @@ naiveTPR <- function(data
         dplyr::sample_frac(size = 1, replace = TRUE) %>%
         dplyr::ungroup()
       
-      # get TPR for this bootstrapped sample
-      TPR.b <- get_naiveTPR(data = boot.b
+      # get NPV for this bootstrapped sample
+      NPV.b <- get_naiveNPV(data = boot.b
                           , risk = {{risk}}
                           , response = {{response}}
                           , groupvar = {{groupvar}}
                           , taus = taus)
       
       # stack this bootstrap with previous
-      TPR.boot <- TPR.boot %>%
-                    bind_rows(TPR.b %>% mutate(bootrep = b))
+      NPV.boot <- NPV.boot %>%
+                    bind_rows(NPV.b %>% mutate(bootrep = b))
     }
     
-    TPR.boot.sum <- TPR.boot %>%
+    NPV.boot.sum <- NPV.boot %>%
       dplyr::group_by({{groupvar}},.data$tau) %>%
-      dplyr::summarise(TPR.bootmean = mean(.data$TPR)
-                       ,TPR.boot.lower = quantile(.data$TPR,alpha/2)
-                       ,TPR.boot.upper = quantile(.data$TPR,1-alpha/2)
-                       ,TPR.bootse = sd(.data$TPR)
+      dplyr::summarise(NPV.bootmean = mean(.data$NPV)
+                       ,NPV.boot.lower = quantile(.data$NPV,alpha/2)
+                       ,NPV.boot.upper = quantile(.data$NPV,1-alpha/2)
+                       ,NPV.bootse = sd(.data$NPV)
                        ,n = n()) 
     
     
-    TPR <- TPR %>%
-      left_join(TPR.boot.sum, by = join_by({{groupvar}}, .data$tau)) 
+    NPV <- NPV %>%
+      left_join(NPV.boot.sum, by = join_by({{groupvar}}, .data$tau)) 
   }
   
   if(se.boot == TRUE){
-    out <- list(TPR = TPR, boot = TPR.boot) 
+    out <- list(NPV = NPV, boot = NPV.boot) 
   }else{
-    out <- list(TPR = TPR)
+    out <- list(NPV = NPV)
   }
   
   return(out)
